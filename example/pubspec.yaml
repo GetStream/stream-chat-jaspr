@@ -1,0 +1,19 @@
+name: stream_chat_jaspr_example
+description: A two-pane chat client built with stream_chat_jaspr.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  jaspr: ^0.23.0
+  stream_chat_jaspr:
+    path: ../packages/stream_chat_jaspr
+
+dev_dependencies:
+  lints: ^6.0.0
+  # Used only by tool/dev.dart, the local build-and-serve script.
+  shelf: ^1.4.0
+  shelf_static: ^1.1.0
+  watcher: ^1.1.0

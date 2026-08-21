@@ -1,0 +1,21 @@
+# Dart / Pub
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# Jaspr
+.jaspr/
+
+# dart compile js output (see example/tool/dev.dart)
+*.dart.js
+*.dart.js.map
+*.dart.js.deps
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store

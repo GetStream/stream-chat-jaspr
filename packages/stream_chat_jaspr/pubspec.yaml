@@ -1,0 +1,23 @@
+name: stream_chat_jaspr
+description: >-
+  Experimental Jaspr UI components for Stream Chat. Builds on the pure-Dart
+  stream_chat client to render a chat experience as real DOM in the browser.
+version: 0.1.0-dev.1
+publish_to: none
+repository: https://github.com/GetStream/stream-chat-flutter
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  collection: ^1.19.0
+  jaspr: ^0.23.0
+  # The pure-Dart low level client. Everything in this package is built on top
+  # of it, no Flutter dependency anywhere in the tree.
+  stream_chat: ^10.3.0
+  universal_web: ^1.1.1
+
+dev_dependencies:
+  jaspr_test: ^0.23.0
+  lints: ^6.0.0
+  test: ^1.25.0
