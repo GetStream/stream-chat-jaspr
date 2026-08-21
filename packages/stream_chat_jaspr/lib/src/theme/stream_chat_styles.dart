@@ -363,7 +363,12 @@ final List<StyleRule> streamChatStyles = [
       'font-weight': '600',
       'user-select': 'none',
     }),
+    // Laid over the initials rather than replacing them, so a photo that is
+    // still downloading or that never arrives leaves something readable
+    // behind instead of a blank disc.
     css('& img').styles(raw: {
+      'position': 'absolute',
+      'inset': '0',
       'width': '100%',
       'height': '100%',
       'border-radius': '50%',
@@ -763,12 +768,15 @@ final List<StyleRule> streamChatStyles = [
       'background': 'var(--sc-surface)',
       'cursor': 'pointer',
       'line-height': '0',
+      // A portrait photo would otherwise run the height of the conversation.
+      'max-height': '320px',
     }),
     css('&[disabled]').styles(raw: {'cursor': 'default'}),
   ]),
+  // The cell reserves the shape, so the image fills it rather than defining it.
   css('.sc-attachment-grid__image').styles(raw: {
     'width': '100%',
-    'max-height': '280px',
+    'height': '100%',
     'object-fit': 'cover',
     'display': 'block',
   }),
@@ -776,7 +784,8 @@ final List<StyleRule> streamChatStyles = [
     'display': 'flex',
     'align-items': 'center',
     'justify-content': 'center',
-    'aspect-ratio': '4 / 3',
+    'width': '100%',
+    'height': '100%',
     'font-size': '28px',
     'color': 'var(--sc-text-secondary)',
   }),

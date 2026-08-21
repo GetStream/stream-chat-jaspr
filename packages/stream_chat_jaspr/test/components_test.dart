@@ -21,6 +21,18 @@ Finder byClass(String className) {
   );
 }
 
+/// The inline value of [property] on the one component [finder] matches.
+String? inlineStyle(Finder finder, String property) {
+  final styles = switch (finder.evaluate().single.component) {
+    div(styles: final styles) => styles,
+    button(styles: final styles) => styles,
+    span(styles: final styles) => styles,
+    img(styles: final styles) => styles,
+    _ => null,
+  };
+  return styles?.properties[property];
+}
+
 void main() {
   final alice = User(id: 'alice', name: 'Alice Anderson');
   final bob = User(id: 'bob', name: 'Bob Brown');
@@ -37,8 +49,18 @@ void main() {
           User(id: 'carol', name: 'Carol', image: 'https://example.com/c.png'),
         ),
       );
-      expect(find.text('C'), findsNothing);
       expect(find.tag('img'), findsOneComponent);
+    });
+
+    testComponents('keeps the initials behind the image', (tester) async {
+      // The image is layered over them, so a photo that is slow to arrive or
+      // never arrives leaves something readable rather than a blank disc.
+      tester.pumpComponent(
+        StreamAvatar.user(
+          User(id: 'carol', name: 'Carol', image: 'https://example.com/c.png'),
+        ),
+      );
+      expect(find.text('CA'), findsOneComponent);
     });
 
     testComponents('omits the presence dot when offline', (tester) async {
@@ -265,6 +287,47 @@ void main() {
       );
       expect(byClass('sc-attachment-grid'), findsOneComponent);
       expect(byClass('sc-attachment-grid__cell'), findsNComponents(2));
+    });
+
+    testComponents('reserves the reported shape of an image', (tester) async {
+      // Without a reserved box the cell has no height until the bytes land,
+      // so the attachment looks missing and then shoves the list around.
+      tester.pumpComponent(
+        StreamAttachmentList(
+          attachments: [
+            Attachment(
+              type: 'image',
+              imageUrl: 'https://example.com/a.png',
+              originalWidth: 1600,
+              originalHeight: 900,
+              uploadState: const UploadState.success(),
+            ),
+          ],
+        ),
+      );
+      expect(
+        inlineStyle(byClass('sc-attachment-grid__cell'), 'aspect-ratio'),
+        '1600 / 900',
+      );
+    });
+
+    testComponents('falls back to a neutral box when the size is unknown',
+        (tester) async {
+      tester.pumpComponent(
+        StreamAttachmentList(
+          attachments: [
+            Attachment(
+              type: 'image',
+              imageUrl: 'https://example.com/a.png',
+              uploadState: const UploadState.success(),
+            ),
+          ],
+        ),
+      );
+      expect(
+        inlineStyle(byClass('sc-attachment-grid__cell'), 'aspect-ratio'),
+        '4 / 3',
+      );
     });
 
     testComponents('renders a file attachment outside the grid',

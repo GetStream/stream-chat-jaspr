@@ -8,7 +8,10 @@ import '../util/formatting.dart';
 ///
 /// The fallback colour is derived from [seed], so the same user always gets
 /// the same colour across sessions and devices without storing anything.
-class StreamAvatar extends StatelessComponent {
+///
+/// The initials are always rendered, with any photo laid over the top. That
+/// way a slow or broken image shows initials rather than an empty disc.
+class StreamAvatar extends StatefulComponent {
   /// Creates an avatar.
   const StreamAvatar({
     this.name,
@@ -92,24 +95,50 @@ class StreamAvatar extends StatelessComponent {
   final bool showPresence;
 
   @override
+  State<StreamAvatar> createState() => _StreamAvatarState();
+}
+
+class _StreamAvatarState extends State<StreamAvatar> {
+  bool _imageFailed = false;
+
+  @override
+  void didUpdateComponent(StreamAvatar oldComponent) {
+    super.didUpdateComponent(oldComponent);
+    // A new URL deserves a fresh attempt, otherwise recycling this element for
+    // another user would inherit the previous one's failure.
+    if (oldComponent.imageUrl != component.imageUrl) _imageFailed = false;
+  }
+
+  @override
   Component build(BuildContext context) {
-    final url = imageUrl;
-    final hue = hueFor(seed ?? name ?? '');
+    final url = component.imageUrl;
+    final name = component.name;
+    final size = component.size;
+    final hue = hueFor(component.seed ?? name ?? '');
+    final showImage = url != null && url.isNotEmpty && !_imageFailed;
 
     return div(
       [
-        if (url != null && url.isNotEmpty)
-          img(src: url, alt: name ?? '')
-        else
-          Component.text(initialsFor(name)),
-        if (showPresence) div([], classes: 'sc-avatar__presence'),
+        Component.text(initialsFor(name)),
+        if (showImage)
+          img(
+            src: url,
+            alt: name ?? '',
+            events: {
+              'error': (_) {
+                if (_imageFailed) return;
+                setState(() => _imageFailed = true);
+              },
+            },
+          ),
+        if (component.showPresence) div([], classes: 'sc-avatar__presence'),
       ],
       classes: 'sc-avatar',
       styles: Styles(raw: {
         'width': '${size}px',
         'height': '${size}px',
         'font-size': '${(size * 0.38).toStringAsFixed(1)}px',
-        if (url == null || url.isEmpty) 'background': 'hsl($hue 52% 46%)',
+        'background': 'hsl($hue 52% 46%)',
       }),
     );
   }

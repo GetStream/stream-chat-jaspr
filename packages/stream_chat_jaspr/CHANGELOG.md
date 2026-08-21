@@ -21,6 +21,10 @@ Brings the component set much closer to the Flutter SDK.
   `StreamChat(translations: ...)`.
 - `StreamPopover` for overlays, with a scrim and escape-to-dismiss.
 - Three pane responsive layout, collapsing to two panes below 1100 px and one below 760 px.
+- Image grid cells reserve the shape Stream reports for an attachment, so a photo no longer
+  appears missing until its bytes arrive and then shifts the conversation as it lands.
+- `StreamAvatar` keeps the initials behind the photo, so a slow or broken image URL leaves a
+  readable fallback rather than an empty disc.
 
 ## 0.1.0-dev.1
 

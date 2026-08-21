@@ -107,6 +107,10 @@ class _StreamAttachmentListState extends State<StreamAttachmentList> {
       ],
       type: ButtonType.button,
       classes: 'sc-attachment-grid__cell',
+      // Hold the space the image will occupy. An `img` has no size until its
+      // bytes arrive, so without this the cell collapses to nothing and the
+      // attachment appears to be missing until it pops in at full height.
+      styles: Styles(raw: {'aspect-ratio': _aspectRatioFor(attachment)}),
       attributes: {
         'aria-label': attachment.title ?? translations.attachment,
         // An image that has not finished uploading has no remote URL yet, so
@@ -118,6 +122,24 @@ class _StreamAttachmentListState extends State<StreamAttachmentList> {
         setState(() => _galleryIndex = index);
       },
     );
+  }
+
+  /// The shape to reserve for [attachment] before its image has loaded.
+  ///
+  /// Stream returns the source dimensions for uploads it has processed, which
+  /// gives an exact box and so no reflow at all. Anything else, including an
+  /// upload still in flight, gets a neutral landscape box.
+  static String _aspectRatioFor(Attachment attachment) {
+    final width = attachment.originalWidth;
+    final height = attachment.originalHeight;
+    if (width == null || height == null || width <= 0 || height <= 0) {
+      return '4 / 3';
+    }
+
+    // Very tall images would otherwise take over the whole conversation.
+    final ratio = width / height;
+    if (ratio < 0.6) return '3 / 5';
+    return '$width / $height';
   }
 
   Component _other(Attachment attachment, StreamChatTranslations translations) {
