@@ -2,6 +2,8 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:stream_chat/stream_chat.dart';
 
+import 'stream_message_composer_controller.dart';
+
 /// Provides a watched [Channel] to the component tree.
 ///
 /// A [Channel] straight out of `client.channel(...)` has no state until it has
@@ -67,21 +69,58 @@ class StreamChannelState extends State<StreamChannel> {
   /// The channel provided to this subtree.
   Channel get channel => component.channel;
 
+  /// The composer state for the main conversation.
+  ///
+  /// A thread pane installs its own controller, so this one always refers to
+  /// the draft for the channel itself.
+  StreamMessageComposerController get composer => _composer;
+
   /// Resolves once the channel has been watched.
   late Future<void> _initialized;
+  late StreamMessageComposerController _composer;
+
+  /// The message whose thread is open, if any.
+  Message? _openThread;
+
+  /// The thread currently open in this channel, if any.
+  Message? get openThread => _openThread;
+
+  /// Opens the thread rooted at [message].
+  void openThreadFor(Message message) {
+    if (_openThread?.id == message.id) return;
+    setState(() => _openThread = message);
+  }
+
+  /// Closes the open thread.
+  void closeThread() {
+    if (_openThread == null) return;
+    setState(() => _openThread = null);
+  }
 
   @override
   void initState() {
     super.initState();
     _initialized = _watch();
+    _composer = StreamMessageComposerController();
   }
 
   @override
   void didUpdateComponent(StreamChannel oldComponent) {
     super.didUpdateComponent(oldComponent);
     if (oldComponent.channel.cid != component.channel.cid) {
-      setState(() => _initialized = _watch());
+      _composer.dispose();
+      setState(() {
+        _initialized = _watch();
+        _composer = StreamMessageComposerController();
+        _openThread = null;
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    _composer.dispose();
+    super.dispose();
   }
 
   Future<void> _watch() async {
@@ -109,7 +148,14 @@ class StreamChannelState extends State<StreamChannel> {
         if (snapshot.connectionState != ConnectionState.done) {
           return component.loading ?? div([], classes: 'sc-spinner');
         }
-        return StreamChannelScope(state: this, child: component.child);
+        return StreamChannelScope(
+          state: this,
+          openThreadId: _openThread?.id,
+          child: StreamComposerScope(
+            controller: _composer,
+            child: component.child,
+          ),
+        );
       },
     );
   }
@@ -120,6 +166,7 @@ class StreamChannelScope extends InheritedComponent {
   /// Creates the scope.
   const StreamChannelScope({
     required this.state,
+    required this.openThreadId,
     required super.child,
     super.key,
   });
@@ -127,7 +174,15 @@ class StreamChannelScope extends InheritedComponent {
   /// The state being provided.
   final StreamChannelState state;
 
+  /// Id of the message whose thread is open.
+  ///
+  /// Carried on the scope rather than read off [state] so that opening or
+  /// closing a thread notifies dependents. Reading it from the mutable state
+  /// object would not, because the object identity never changes.
+  final String? openThreadId;
+
   @override
   bool updateShouldNotify(StreamChannelScope oldComponent) =>
-      state.channel.cid != oldComponent.state.channel.cid;
+      state.channel.cid != oldComponent.state.channel.cid ||
+      openThreadId != oldComponent.openThreadId;
 }

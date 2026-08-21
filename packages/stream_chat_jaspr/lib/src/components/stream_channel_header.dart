@@ -43,7 +43,7 @@ class StreamChannelHeader extends StatelessComponent {
                   classes: 'sc-channel-header__title',
                 ),
                 div(
-                  [Component.text(_subtitle(channel, currentUserId))],
+                  [Component.text(_subtitle(context, channel, currentUserId))],
                   classes: 'sc-channel-header__subtitle',
                 ),
               ],
@@ -57,23 +57,28 @@ class StreamChannelHeader extends StatelessComponent {
     );
   }
 
-  String _subtitle(Channel channel, String? currentUserId) {
+  String _subtitle(
+    BuildContext context,
+    Channel channel,
+    String? currentUserId,
+  ) {
+    final translations = StreamChat.translationsOf(context);
     final members = channel.state?.members ?? const <Member>[];
     final others = members.where((it) => it.userId != currentUserId).toList();
 
     if (others.length == 1) {
       final user = others.first.user;
       if (user == null) return '';
-      if (user.online) return 'Online';
+      if (user.online) return translations.online;
       final lastActive = user.lastActive;
-      if (lastActive == null) return 'Offline';
-      return 'Last seen ${_ago(lastActive)}';
+      if (lastActive == null) return translations.offline;
+      return translations.lastSeen(_ago(lastActive));
     }
 
     final onlineCount = others.where((it) => it.user?.online ?? false).length;
-    final memberLabel = '${members.length} members';
+    final memberLabel = translations.memberCount(members.length);
     if (onlineCount == 0) return memberLabel;
-    return '$memberLabel, $onlineCount online';
+    return '$memberLabel, $onlineCount ${translations.online.toLowerCase()}';
   }
 
   String _ago(DateTime date) {

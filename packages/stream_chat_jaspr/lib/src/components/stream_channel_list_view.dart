@@ -112,7 +112,11 @@ class _StreamChannelListViewState extends State<StreamChannelListView> {
 
         if (controller.error case final error? when controller.channels.isEmpty) {
           return div(
-            [Component.text('Could not load channels: $error')],
+            [
+              Component.text(
+                StreamChat.translationsOf(context).loadChannelsFailed(error),
+              ),
+            ],
             classes: 'sc-error',
           );
         }
@@ -120,7 +124,7 @@ class _StreamChannelListViewState extends State<StreamChannelListView> {
         if (controller.channels.isEmpty) {
           return component.empty ??
               div(
-                [Component.text('No channels yet')],
+                [Component.text(StreamChat.translationsOf(context).noChannels)],
                 classes: 'sc-empty',
               );
         }

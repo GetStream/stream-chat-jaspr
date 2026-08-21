@@ -20,14 +20,17 @@ class StreamConnectionStatusBanner extends StatelessComponent {
       stream: chat.connectionStatusStream,
       initialData: chat.client.wsConnectionStatus,
       builder: (context, snapshot) {
+        final translations = StreamChat.translationsOf(context);
         return switch (snapshot.data) {
           ConnectionStatus.connecting => div(
-              [Component.text('Reconnecting…')],
+              [Component.text(translations.reconnecting)],
               classes: 'sc-connection-banner sc-connection-banner--connecting',
+              attributes: const {'role': 'status'},
             ),
           ConnectionStatus.disconnected => div(
-              [Component.text('You are offline')],
+              [Component.text(translations.offline)],
               classes: 'sc-connection-banner',
+              attributes: const {'role': 'status'},
             ),
           _ => Component.empty(),
         };

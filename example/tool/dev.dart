@@ -8,6 +8,7 @@
 //   dart run tool/dev.dart              # build, serve on :8080, rebuild on change
 //   dart run tool/dev.dart --release    # optimised one-off build, no watching
 //   dart run tool/dev.dart --port 3000
+//   dart run tool/dev.dart --host any   # also reachable from other devices
 //
 // Once jaspr_web_compilers supports the current SDK, this can be replaced by
 // `jaspr serve` and deleted.
@@ -26,6 +27,10 @@ Future<void> main(List<String> args) async {
   final isRelease = args.contains('--release');
   final port = _intArg(args, '--port') ?? 8080;
   final shouldServe = !args.contains('--no-serve');
+  // `--host any` binds every interface so phones and tablets on the same
+  // network can reach the app, which is the only way to exercise the narrow
+  // layout on a real device.
+  final bindAnyHost = _stringArg(args, '--host') == 'any';
 
   final ok = await _compile(isRelease: isRelease);
   if (!ok && isRelease) exitCode = 1;
@@ -35,8 +40,15 @@ Future<void> main(List<String> args) async {
       .addMiddleware(_noCache)
       .addHandler(createStaticHandler('web', defaultDocument: 'index.html'));
 
-  final server = await shelf_io.serve(handler, 'localhost', port);
-  stdout.writeln('Serving http://${server.address.host}:${server.port}');
+  final address = bindAnyHost ? InternetAddress.anyIPv4 : InternetAddress.loopbackIPv4;
+  final server = await shelf_io.serve(handler, address, port);
+
+  stdout.writeln('Serving http://localhost:${server.port}');
+  if (bindAnyHost) {
+    for (final ip in await _localAddresses()) {
+      stdout.writeln('         http://$ip:${server.port}');
+    }
+  }
 
   if (isRelease) return;
   stdout.writeln('Watching for changes. Ctrl-C to stop.');
@@ -120,8 +132,25 @@ Handler Function(Handler) get _noCache => (innerHandler) {
       };
     };
 
-int? _intArg(List<String> args, String name) {
+/// Non-loopback IPv4 addresses this machine can be reached on.
+Future<List<String>> _localAddresses() async {
+  final interfaces = await NetworkInterface.list(
+    type: InternetAddressType.IPv4,
+    includeLoopback: false,
+  );
+  return [
+    for (final interface in interfaces)
+      for (final address in interface.addresses) address.address,
+  ];
+}
+
+String? _stringArg(List<String> args, String name) {
   final index = args.indexOf(name);
   if (index == -1 || index + 1 >= args.length) return null;
-  return int.tryParse(args[index + 1]);
+  return args[index + 1];
+}
+
+int? _intArg(List<String> args, String name) {
+  final value = _stringArg(args, name);
+  return value == null ? null : int.tryParse(value);
 }

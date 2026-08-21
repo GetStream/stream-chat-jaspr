@@ -60,7 +60,15 @@ class StreamChannelListTile extends StatelessComponent {
                 ),
                 if (timestamp != null)
                   span(
-                    [Component.text(formatChannelTimestamp(timestamp))],
+                    [
+                      Component.text(
+                        formatChannelTimestamp(
+                          timestamp,
+                          yesterday:
+                              StreamChat.translationsOf(context).yesterday,
+                        ),
+                      ),
+                    ],
                     classes: 'sc-channel-tile__time',
                   ),
               ],

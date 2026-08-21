@@ -1,9 +1,9 @@
-/// Small date/name helpers used by the components.
+/// Small date and name helpers used by the components.
 ///
-/// These are intentionally dependency-free rather than using `intl`: the
-/// Flutter SDK pulls localisation in through `stream_chat_localizations`, and
-/// this package has no equivalent yet. Anything user-visible here is a
-/// placeholder that a real localisation layer should replace.
+/// These are intentionally dependency-free rather than using `intl`. Words
+/// that appear in the output are passed in by the caller, which reads them
+/// from [StreamChatTranslations], so that this file holds only the date
+/// arithmetic and not any English.
 library;
 
 const List<String> _weekdays = [
@@ -52,20 +52,24 @@ int _daysAgo(DateTime date) {
 ///
 /// Today renders as a time, the last week as a weekday, anything older as a
 /// numeric date.
-String formatChannelTimestamp(DateTime date) {
+String formatChannelTimestamp(DateTime date, {String yesterday = 'Yesterday'}) {
   final days = _daysAgo(date);
   if (days <= 0) return formatTimeOfDay(date);
-  if (days == 1) return 'Yesterday';
+  if (days == 1) return yesterday;
   if (days < 7) return _weekdays[date.toLocal().weekday - 1];
   final local = date.toLocal();
   return '${_two(local.day)}/${_two(local.month)}/${local.year}';
 }
 
 /// Heading for the date separators in the message list.
-String formatDateDivider(DateTime date) {
+String formatDateDivider(
+  DateTime date, {
+  String today = 'Today',
+  String yesterday = 'Yesterday',
+}) {
   final days = _daysAgo(date);
-  if (days <= 0) return 'Today';
-  if (days == 1) return 'Yesterday';
+  if (days <= 0) return today;
+  if (days == 1) return yesterday;
   final local = date.toLocal();
   final month = _months[local.month - 1];
   if (local.year == DateTime.now().year) return '$month ${local.day}';

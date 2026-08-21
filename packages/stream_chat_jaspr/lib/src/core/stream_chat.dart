@@ -2,6 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:stream_chat/stream_chat.dart';
 
+import '../i18n/stream_chat_translations.dart';
 import '../theme/stream_chat_styles.dart';
 import '../theme/stream_chat_theme.dart';
 
@@ -28,6 +29,7 @@ class StreamChat extends StatefulComponent {
     required this.client,
     required this.child,
     this.theme,
+    this.translations = const StreamChatTranslations(),
     this.injectStyles = true,
     super.key,
   });
@@ -43,6 +45,9 @@ class StreamChat extends StatefulComponent {
 
   /// Design tokens for the components below. Defaults to [StreamChatTheme.light].
   final StreamChatTheme? theme;
+
+  /// Strings for the components below. Defaults to English.
+  final StreamChatTranslations translations;
 
   /// Whether to render [streamChatStyles] into a `<style>` element.
   ///
@@ -75,6 +80,14 @@ class StreamChat extends StatefulComponent {
   /// The theme provided by the closest [StreamChat] ancestor.
   static StreamChatTheme themeOf(BuildContext context) => of(context).theme;
 
+  /// The translations provided by the closest [StreamChat] ancestor.
+  ///
+  /// Falls back to English when there is no ancestor, so leaf components can
+  /// be rendered in isolation, which is mostly useful in tests.
+  static StreamChatTranslations translationsOf(BuildContext context) {
+    return maybeOf(context)?.translations ?? const StreamChatTranslations();
+  }
+
   @override
   State<StreamChat> createState() => StreamChatState();
 }
@@ -86,6 +99,9 @@ class StreamChatState extends State<StreamChat> {
 
   /// The active theme.
   StreamChatTheme get theme => component.theme ?? _fallbackTheme;
+
+  /// The active translations.
+  StreamChatTranslations get translations => component.translations;
 
   late final StreamChatTheme _fallbackTheme = StreamChatTheme.light();
 
@@ -104,6 +120,7 @@ class StreamChatState extends State<StreamChat> {
     return StreamChatScope(
       state: this,
       theme: theme,
+      translations: translations,
       child: div(
         [
           if (component.injectStyles) Style(styles: streamChatStyles),
@@ -128,6 +145,7 @@ class StreamChatScope extends InheritedComponent {
   const StreamChatScope({
     required this.state,
     required this.theme,
+    required this.translations,
     required super.child,
     super.key,
   });
@@ -138,7 +156,12 @@ class StreamChatScope extends InheritedComponent {
   /// The theme being provided.
   final StreamChatTheme theme;
 
+  /// The translations being provided.
+  final StreamChatTranslations translations;
+
   @override
   bool updateShouldNotify(StreamChatScope oldComponent) =>
-      state != oldComponent.state || theme != oldComponent.theme;
+      state != oldComponent.state ||
+      theme != oldComponent.theme ||
+      translations != oldComponent.translations;
 }

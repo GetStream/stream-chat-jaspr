@@ -5,7 +5,8 @@ import 'package:stream_chat_jaspr/stream_chat_jaspr.dart';
 /// The two-pane chat layout: channel list on the left, conversation on the right.
 ///
 /// Below 760px the two panes collapse into one and `data-pane` decides which
-/// of them is visible, which is handled entirely in CSS.
+/// of them is visible, which is handled entirely in CSS. An open thread adds a
+/// third column inside the conversation pane, which collapses the same way.
 class ChatShell extends StatefulComponent {
   /// Creates the shell.
   const ChatShell({
@@ -30,10 +31,12 @@ class ChatShell extends StatefulComponent {
 
 class _ChatShellState extends State<ChatShell> {
   Channel? _selected;
+  String? _highlightedMessageId;
 
   @override
   Component build(BuildContext context) {
     final selected = _selected;
+    final currentUserId = StreamChat.of(context).currentUser?.id;
 
     return div(
       [
@@ -41,9 +44,14 @@ class _ChatShellState extends State<ChatShell> {
           [
             _sidebarHeader(context),
             const StreamConnectionStatusBanner(),
+            if (currentUserId != null)
+              StreamMessageSearchView(
+                filter: Filter.in_('members', [currentUserId]),
+                onResultTap: _onSearchResultTap,
+              ),
             StreamChannelListView(
               selectedChannelCid: selected?.cid,
-              onChannelTap: (channel) => setState(() => _selected = channel),
+              onChannelTap: _select,
             ),
           ],
           classes: 'sc-channel-list-pane',
@@ -61,12 +69,7 @@ class _ChatShellState extends State<ChatShell> {
                 // the initial watch instead of reusing the previous state.
                 key: ValueKey(selected.cid),
                 channel: selected,
-                child: Component.fragment([
-                  StreamChannelHeader(leading: _backButton()),
-                  const StreamMessageListView(),
-                  const StreamTypingIndicator(),
-                  const StreamMessageInput(),
-                ]),
+                child: Builder(builder: _conversation),
               ),
           ],
           classes: 'sc-channel-pane',
@@ -75,6 +78,64 @@ class _ChatShellState extends State<ChatShell> {
       classes: 'sc-shell',
       attributes: {'data-pane': selected == null ? 'list' : 'channel'},
     );
+  }
+
+  /// The conversation column plus the thread column, if one is open.
+  ///
+  /// Built through a [Builder] so that it runs below [StreamChannel] and can
+  /// therefore read the open thread from the channel scope. That is where the
+  /// action menu on a message puts it.
+  Component _conversation(BuildContext context) {
+    final channelState = StreamChannel.of(context);
+    final thread = channelState.openThread;
+
+    return div(
+      [
+        div(
+          [
+            StreamChannelHeader(leading: _backButton()),
+            StreamMessageListView(highlightedMessageId: _highlightedMessageId),
+            const StreamTypingIndicator(),
+            const StreamMessageInput(),
+          ],
+          classes: 'sc-conversation',
+        ),
+        if (thread != null)
+          StreamThreadView(
+            key: ValueKey(thread.id),
+            parent: thread,
+            onClose: channelState.closeThread,
+          ),
+      ],
+      classes: 'sc-conversation-split',
+      attributes: {'data-thread': thread == null ? 'closed' : 'open'},
+    );
+  }
+
+  void _select(Channel channel) {
+    setState(() {
+      _selected = channel;
+      _highlightedMessageId = null;
+    });
+  }
+
+  /// Opens the channel a search result belongs to and highlights the match.
+  ///
+  /// The message may be older than the loaded page, in which case it is not on
+  /// screen yet. Paging back to it is the part the Flutter SDK solves with
+  /// `idAround`, which this example does not attempt.
+  void _onSearchResultTap(Message message, ChannelModel? channelModel) {
+    final cid = channelModel?.cid;
+    if (cid == null) return;
+
+    final client = StreamChat.of(context).client;
+    final channel = client.state.channels[cid];
+    if (channel == null) return;
+
+    setState(() {
+      _selected = channel;
+      _highlightedMessageId = message.id;
+    });
   }
 
   Component _sidebarHeader(BuildContext context) {
@@ -92,8 +153,9 @@ class _ChatShellState extends State<ChatShell> {
           type: ButtonType.button,
           classes: 'app-icon-button',
           attributes: {
-            'aria-label':
-                component.isDark ? 'Switch to light theme' : 'Switch to dark theme',
+            'aria-label': component.isDark
+                ? 'Switch to light theme'
+                : 'Switch to dark theme',
             'title': 'Toggle theme',
           },
           onClick: component.onToggleTheme,

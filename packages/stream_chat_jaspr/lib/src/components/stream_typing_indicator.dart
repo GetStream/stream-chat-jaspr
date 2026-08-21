@@ -28,20 +28,29 @@ class StreamTypingIndicator extends StatelessComponent {
             .toList();
 
         return div(
-          [Component.text(_label(users))],
+          [
+            if (users.isNotEmpty) ...[
+              div(
+                [span([]), span([]), span([])],
+                classes: 'sc-typing__dots',
+                attributes: const {'aria-hidden': 'true'},
+              ),
+              Component.text(_label(context, users)),
+            ],
+          ],
           classes: 'sc-typing',
-          attributes: {'aria-live': 'polite'},
+          attributes: const {'aria-live': 'polite'},
         );
       },
     );
   }
 
-  String _label(List<User> users) {
+  String _label(BuildContext context, List<User> users) {
+    final translations = StreamChat.translationsOf(context);
     return switch (users.length) {
       0 => '',
-      1 => '${users.first.name} is typing…',
-      2 => '${users[0].name} and ${users[1].name} are typing…',
-      _ => '${users.length} people are typing…',
+      1 => translations.typingSingle(users.first.name),
+      _ => translations.typingMultiple([for (final user in users) user.name]),
     };
   }
 }

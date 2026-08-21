@@ -2,26 +2,22 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:stream_chat/stream_chat.dart';
 
+import '../core/stream_channel.dart';
+import '../core/stream_chat.dart';
+import '../i18n/stream_chat_translations.dart';
 import '../util/formatting.dart';
+import '../util/icons.dart';
+import '../util/message_text.dart';
+import 'stream_attachment_list.dart';
 import 'stream_avatar.dart';
+import 'stream_message_actions.dart';
+import 'stream_reaction_picker.dart';
 
-/// Emoji shown for each of Stream's default reaction types.
-///
-/// Unknown types fall through to the raw type string, so custom reactions
-/// still render something rather than disappearing.
-const Map<String, String> defaultReactionEmoji = {
-  'like': '\u{1F44D}',
-  'love': '\u{2764}\u{FE0F}',
-  'haha': '\u{1F602}',
-  'wow': '\u{1F62E}',
-  'sad': '\u{1F622}',
-  'angry': '\u{1F621}',
-};
-
-/// Renders a single message: avatar, author line, bubble, and reactions.
+/// Renders a single message: avatar, author line, bubble, attachments,
+/// reactions, and the controls that act on it.
 ///
 /// Consecutive messages from the same author are visually grouped by the
-/// parent list, which passes `showAvatar: false` / `showAuthor: false` for
+/// parent list, which passes `showAvatar: false` and `showAuthor: false` for
 /// every message after the first in a run.
 class StreamMessageTile extends StatelessComponent {
   /// Creates a message tile.
@@ -30,7 +26,12 @@ class StreamMessageTile extends StatelessComponent {
     required this.isOwn,
     this.showAvatar = true,
     this.showAuthor = true,
-    this.onReactionTap,
+    this.showActions = true,
+    this.showThreadFooter = true,
+    this.showDeliveryState = false,
+    this.readBy = const [],
+    this.highlighted = false,
+    this.onQuotedMessageTap,
     super.key,
   });
 
@@ -46,12 +47,41 @@ class StreamMessageTile extends StatelessComponent {
   /// Whether to render the author name and timestamp above the bubble.
   final bool showAuthor;
 
-  /// Called when an existing reaction chip is activated.
-  final void Function(Message message, String reactionType)? onReactionTap;
+  /// Whether to offer reactions and the action menu on hover.
+  final bool showActions;
+
+  /// Whether to render the reply count that opens the thread.
+  ///
+  /// Suppressed inside a thread, where the replies are already on screen.
+  final bool showThreadFooter;
+
+  /// Whether to render the sending or read indicator under the bubble.
+  ///
+  /// The list sets this only on the newest own message, matching the
+  /// convention in the Flutter SDK and in most chat products, where a column
+  /// of identical ticks adds nothing.
+  final bool showDeliveryState;
+
+  /// Users who have read this message, excluding its author.
+  final List<User> readBy;
+
+  /// Whether to draw attention to this message, used when jumping to a search
+  /// result.
+  final bool highlighted;
+
+  /// Called when the quoted message preview is activated.
+  final void Function(Message quoted)? onQuotedMessageTap;
 
   @override
   Component build(BuildContext context) {
+    final translations = StreamChat.translationsOf(context);
     final user = message.user;
+
+    final classes = [
+      'sc-message-group',
+      if (isOwn) 'sc-message-group--own',
+      if (highlighted) 'sc-message-group--highlighted',
+    ].join(' ');
 
     return div(
       [
@@ -65,18 +95,49 @@ class StreamMessageTile extends StatelessComponent {
             div([], classes: 'sc-message-group__spacer'),
         div(
           [
-            if (showAuthor) _meta(),
-            _bubble(),
+            if (message.pinned) _pinnedMarker(translations),
+            if (showAuthor) _meta(translations),
+            div(
+              [
+                _bubble(translations),
+                if (showActions && !message.isDeleted)
+                  StreamMessageActions(
+                    message: message,
+                    isOwn: isOwn,
+                    showThreadAction: showThreadFooter,
+                  ),
+              ],
+              classes: 'sc-message-group__row',
+            ),
             ..._reactions(),
+            if (showThreadFooter && (message.replyCount ?? 0) > 0)
+              _threadFooter(context, translations),
+            if (showDeliveryState) _deliveryState(translations),
           ],
           classes: 'sc-message-group__stack',
         ),
       ],
-      classes: 'sc-message-group${isOwn ? ' sc-message-group--own' : ''}',
+      classes: classes,
+      attributes: {'data-message-id': message.id},
     );
   }
 
-  Component _meta() {
+  Component _pinnedMarker(StreamChatTranslations translations) {
+    final by = message.pinnedBy?.name;
+    return div(
+      [
+        StreamIcons.pin(),
+        span([
+          Component.text(
+            by == null ? translations.pinMessage : translations.pinnedBy(by),
+          ),
+        ]),
+      ],
+      classes: 'sc-message-pinned',
+    );
+  }
+
+  Component _meta(StreamChatTranslations translations) {
     final authorName = isOwn ? null : message.user?.name;
     return div(
       [
@@ -86,12 +147,17 @@ class StreamMessageTile extends StatelessComponent {
             classes: 'sc-message-meta__author',
           ),
         span([Component.text(formatTimeOfDay(message.createdAt))]),
+        if (message.messageTextUpdatedAt != null)
+          span(
+            [Component.text(translations.edited)],
+            classes: 'sc-message-meta__edited',
+          ),
       ],
       classes: 'sc-message-meta',
     );
   }
 
-  Component _bubble() {
+  Component _bubble(StreamChatTranslations translations) {
     final state = message.state;
     final isDeleted = message.isDeleted || state.isDeleted;
 
@@ -104,50 +170,82 @@ class StreamMessageTile extends StatelessComponent {
 
     if (isDeleted) {
       return div(
-        [Component.text('This message was deleted')],
+        [Component.text(translations.messageDeleted)],
         classes: 'sc-bubble$modifier',
       );
     }
 
     final text = message.text ?? '';
-    final attachments = message.attachments;
+    final quoted = message.quotedMessage;
+
+    // A message that is nothing but attachments gets no bubble. A coloured
+    // frame around a photo adds nothing and makes the image look inset.
+    final isBare =
+        text.isEmpty && quoted == null && message.attachments.isNotEmpty;
 
     return div(
       [
-        if (text.isNotEmpty) Component.text(text),
-        if (attachments.isNotEmpty)
-          div(
-            [for (final attachment in attachments) _attachment(attachment)],
-            classes: 'sc-bubble__attachments',
-          ),
+        if (quoted != null) _quotedPreview(quoted, translations),
+        if (text.isNotEmpty)
+          div(_textSpans(text), classes: 'sc-bubble__text'),
+        if (message.attachments.isNotEmpty)
+          StreamAttachmentList(attachments: message.attachments),
       ],
-      classes:
-          'sc-bubble${isOwn ? ' sc-bubble--own' : ''}$modifier',
+      classes: 'sc-bubble'
+          '${isOwn ? ' sc-bubble--own' : ''}'
+          '${isBare ? ' sc-bubble--bare' : ''}'
+          '$modifier',
     );
   }
 
-  Component _attachment(Attachment attachment) {
-    final imageUrl = attachment.imageUrl ?? attachment.thumbUrl;
-    if (attachment.type == AttachmentType.image && imageUrl != null) {
-      return img(
-        src: imageUrl,
-        alt: attachment.title ?? 'Image attachment',
-        classes: 'sc-attachment-image',
-      );
-    }
+  /// Renders message text with links, mentions, and inline code marked up.
+  List<Component> _textSpans(String text) {
+    final mentioned = {
+      for (final user in message.mentionedUsers) ...[
+        user.name,
+        user.id,
+      ],
+    };
 
-    final url = attachment.assetUrl ?? attachment.titleLink ?? imageUrl;
-    final title = attachment.title ?? attachment.fallback ?? 'Attachment';
-    if (url == null) {
-      return div([Component.text(title)], classes: 'sc-attachment-file');
-    }
+    return [
+      for (final token in tokenizeMessageText(text, mentionedNames: mentioned))
+        switch (token.kind) {
+          MessageTokenKind.text => Component.text(token.value),
+          MessageTokenKind.code =>
+            code([Component.text(token.value)], classes: 'sc-code'),
+          MessageTokenKind.mention => span(
+              [Component.text('@${token.value}')],
+              classes: 'sc-mention',
+            ),
+          MessageTokenKind.link => a(
+              [Component.text(token.value)],
+              href: token.value,
+              target: Target.blank,
+              classes: 'sc-link',
+              attributes: const {'rel': 'noopener noreferrer'},
+            ),
+        },
+    ];
+  }
 
-    return a(
-      [Component.text(title)],
-      href: url,
-      target: Target.blank,
-      classes: 'sc-attachment-file',
-      attributes: {'rel': 'noopener noreferrer'},
+  Component _quotedPreview(Message quoted, StreamChatTranslations translations) {
+    final author = quoted.user?.name;
+    final text = quoted.isDeleted
+        ? translations.messageDeleted
+        : (quoted.text ?? '').isNotEmpty
+            ? quoted.text!
+            : translations.attachment;
+
+    return button(
+      [
+        if (author != null)
+          span([Component.text(author)], classes: 'sc-quoted__author'),
+        span([Component.text(text)], classes: 'sc-quoted__text'),
+      ],
+      type: ButtonType.button,
+      classes: 'sc-quoted',
+      attributes: {'aria-label': '${translations.quoteMessage}: $text'},
+      onClick: () => onQuotedMessageTap?.call(quoted),
     );
   }
 
@@ -164,18 +262,106 @@ class StreamMessageTile extends StatelessComponent {
         [
           for (final MapEntry(key: type, value: group) in sorted)
             if (group.count > 0)
-              button(
-                [
-                  Component.text(defaultReactionEmoji[type] ?? type),
-                  Component.text('${group.count}'),
-                ],
-                classes:
-                    'sc-reaction${own.contains(type) ? ' sc-reaction--own' : ''}',
-                onClick: () => onReactionTap?.call(message, type),
+              _ReactionChip(
+                message: message,
+                type: type,
+                count: group.count,
+                isOwn: own.contains(type),
               ),
         ],
         classes: 'sc-reactions',
       ),
     ];
+  }
+
+  Component _threadFooter(
+    BuildContext context,
+    StreamChatTranslations translations,
+  ) {
+    final count = message.replyCount ?? 0;
+    return button(
+      [
+        StreamIcons.thread(),
+        Component.text(translations.replyCount(count)),
+      ],
+      type: ButtonType.button,
+      classes: 'sc-thread-footer',
+      onClick: () => StreamChannel.maybeOf(context)?.openThreadFor(message),
+    );
+  }
+
+  Component _deliveryState(StreamChatTranslations translations) {
+    final state = message.state;
+
+    final (icon, label) = switch (state) {
+      _ when state.isFailed => (StreamIcons.alert(), translations.messageFailed),
+      _ when state.isOutgoing => (StreamIcons.clock(), translations.sendingLabel),
+      _ when readBy.isNotEmpty => (
+          StreamIcons.checkAll(),
+          translations.readBy([for (final user in readBy) user.name]),
+        ),
+      _ => (StreamIcons.check(), translations.deliveredLabel),
+    };
+
+    return div(
+      [
+        icon,
+        span([Component.text(label)]),
+      ],
+      classes: state.isFailed
+          ? 'sc-delivery sc-delivery--failed'
+          : 'sc-delivery',
+      attributes: const {'aria-live': 'polite'},
+    );
+  }
+}
+
+/// A single reaction chip, which toggles the current user's reaction.
+///
+/// Split out so that the tile itself can stay stateless: only the chip needs
+/// to talk to the channel.
+class _ReactionChip extends StatelessComponent {
+  const _ReactionChip({
+    required this.message,
+    required this.type,
+    required this.count,
+    required this.isOwn,
+  });
+
+  final Message message;
+  final String type;
+  final int count;
+  final bool isOwn;
+
+  @override
+  Component build(BuildContext context) {
+    return button(
+      [
+        Component.text(defaultReactionEmoji[type] ?? type),
+        Component.text('$count'),
+      ],
+      type: ButtonType.button,
+      classes: isOwn ? 'sc-reaction sc-reaction--own' : 'sc-reaction',
+      attributes: {
+        'aria-label': '$type $count',
+        'aria-pressed': '$isOwn',
+        'title': type,
+      },
+      onClick: () {
+        // Resolved on activation rather than during build so that a tile can
+        // be rendered outside a channel scope, which is what the component
+        // tests do.
+        final channel = StreamChannel.maybeOf(context)?.channel;
+        if (channel == null) return;
+
+        final reaction = Reaction(type: type);
+        final future = isOwn
+            ? channel.deleteReaction(message, reaction)
+            : channel.sendReaction(message, reaction);
+        // A failure here is already reflected in the UI, because the client
+        // rolls its optimistic update back when the request fails.
+        future.ignore();
+      },
+    );
   }
 }
