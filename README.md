@@ -8,6 +8,8 @@ This project brings the component model of the
 plain DOM. There is no canvas renderer, no Flutter engine, and no WebAssembly payload. The
 release build of the example application is 0.8 MB of JavaScript, 233 KB gzipped.
 
+**Live demo: <https://getstream.github.io/stream-chat-jaspr/>**
+
 > **Status: experimental.** This is a feasibility study, not a supported product. Breaking
 > changes should be expected, and some features of the Flutter SDK are still missing. See
 > [Feature coverage](#feature-coverage) before adopting it.

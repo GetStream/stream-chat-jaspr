@@ -5,6 +5,8 @@ on the left, the active conversation in the middle, and an open thread on the ri
 1100 px the thread replaces the channel list, and below 760 px the layout collapses to a
 single pane with a back control.
 
+It is deployed at <https://getstream.github.io/stream-chat-jaspr/>.
+
 ## Running
 
 ```bash
@@ -20,9 +22,17 @@ The application is served at <http://localhost:8080>.
 | `--host any` | Bind every interface so other devices on the network can connect |
 | `--release` | Optimised build (`-O2`) with watching disabled |
 | `--no-serve` | Build only |
+| `--output <dir>` | Write a publishable directory and exit |
 
 `--host any` prints the LAN addresses it is reachable on, which is the practical way to try
 the single pane layout on a real phone.
+
+`--output` assembles the directory that gets published: the compiled bundle and the
+hand-written assets, without the Dart entrypoint or the compiler's `.map` and `.deps`
+sidecars. `.github/workflows/pages.yml` runs it on every push to `master`, gated on
+`dart analyze` and the test suite. Because `index.html` references the bundle relatively
+and the app has no router, the same output works at a domain root or a repository subpath
+with no base href.
 
 `tool/dev.dart` replaces `jaspr serve`, which cannot resolve on this SDK. See
 [Toolchain constraints](../README.md#toolchain-constraints) in the repository README. The
