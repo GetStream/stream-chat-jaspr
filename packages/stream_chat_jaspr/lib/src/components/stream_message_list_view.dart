@@ -15,7 +15,7 @@ import 'stream_message_tile.dart';
 /// The container is laid out with `flex-direction: column-reverse`, which is
 /// what keeps the newest message in view. In a reversed flex container the
 /// browser anchors scrolling to the visual bottom, so appending a message
-/// keeps the viewport pinned without any imperative scrolling — and a user who
+/// keeps the viewport pinned without any imperative scrolling, and a user who
 /// has scrolled up stays where they are. The cost is that children must be
 /// emitted newest-first, which is why the visual list is built in natural
 /// order and reversed at the end.

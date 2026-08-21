@@ -11,8 +11,8 @@ enum StreamChatBrightness {
 
 /// Design tokens for the Stream Chat Jaspr components.
 ///
-/// Unlike the Flutter SDK — where the theme is read from the component tree on
-/// every build — this theme is emitted once as a set of CSS custom properties
+/// Unlike the Flutter SDK, where the theme is read from the component tree on
+/// every build, this theme is emitted once as a set of CSS custom properties
 /// on the root element. Every component stylesheet is written against those
 /// variables, so swapping a theme is a single attribute update on one element
 /// rather than a rebuild of the whole subtree.

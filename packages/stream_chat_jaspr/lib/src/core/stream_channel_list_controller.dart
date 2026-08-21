@@ -160,7 +160,7 @@ class StreamChannelListController extends ChangeNotifier {
           _channels.insert(0, _channels.removeAt(index));
           notifyListeners();
         } else if (index == -1) {
-          // A channel we have not loaded became active — pull it in.
+          // A channel we have not loaded became active, so pull it in.
           unawaited(refresh());
         }
       },

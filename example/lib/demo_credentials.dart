@@ -27,14 +27,14 @@ class DemoCredentials {
 
 /// Public demo accounts, the same ones the Flutter SDK tutorials use.
 ///
-/// The tokens are long lived and intentionally committed — they belong to
+/// The tokens are long lived and intentionally committed. They belong to
 /// Stream's public sandbox apps and grant access to nothing else. A real app
 /// must mint tokens server-side with its API secret, which must never reach
 /// the browser.
 const List<DemoCredentials> demoCredentials = [
   DemoCredentials(
     label: 'Sample app user',
-    description: 'Several channels with history — best for trying the list.',
+    description: 'Several channels with history. Best for trying the list.',
     apiKey: 's2dxdhpxd94g',
     userId: 'super-band-9',
     token:

@@ -35,7 +35,7 @@ class StreamChat extends StatefulComponent {
   /// The client every descendant component reads from.
   ///
   /// Connecting the user is left to the application, exactly as in the Flutter
-  /// SDK — call `client.connectUser(...)` before or after mounting.
+  /// SDK. Call `client.connectUser(...)` before or after mounting.
   final StreamChatClient client;
 
   /// The subtree that gets access to [client].

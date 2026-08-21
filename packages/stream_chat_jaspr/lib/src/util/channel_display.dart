@@ -2,8 +2,8 @@ import 'package:stream_chat/stream_chat.dart';
 
 /// A human readable title for [channel].
 ///
-/// Explicitly named channels use their name. Unnamed ones — which is what the
-/// API returns for direct conversations — are titled after the other
+/// Explicitly named channels use their name. Unnamed ones, which is what the
+/// API returns for direct conversations, are titled after the other
 /// participants, since "!members-Ku6lJ..." is not something to show a user.
 String channelDisplayName(Channel channel, {String? currentUserId}) {
   final name = channel.name;

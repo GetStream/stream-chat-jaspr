@@ -14,9 +14,9 @@ import 'stream_channel_list_tile.dart';
 /// A scrollable, paginated list of channels.
 ///
 /// Creates and owns a [StreamChannelListController] unless you pass one in.
-/// Pagination is driven by the scroll position of the list itself — there is
-/// no `ScrollController` equivalent in Jaspr, so the next page is requested
-/// when the container gets within a threshold of its own scroll extent.
+/// Pagination is driven by the scroll position of the list itself. Jaspr has no
+/// `ScrollController` equivalent, so the next page is requested when the
+/// container gets within a threshold of its own scroll extent.
 class StreamChannelListView extends StatefulComponent {
   /// Creates a channel list.
   const StreamChannelListView({

@@ -13,7 +13,7 @@ import '../core/stream_channel.dart';
 /// SDK: plain text only. Attachments, mentions, slash commands, polls, voice
 /// recording, quoted replies, and edit mode are all absent.
 ///
-/// The field is controlled — Jaspr syncs `value` onto the DOM node and only
+/// The field is controlled. Jaspr syncs `value` onto the DOM node and only
 /// writes when it differs, so the caret is preserved while typing.
 class StreamMessageInput extends StatefulComponent {
   /// Creates a message composer.

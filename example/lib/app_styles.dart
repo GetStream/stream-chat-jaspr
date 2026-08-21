@@ -1,8 +1,8 @@
 import 'package:jaspr/dom.dart';
 
-/// Styles for the example app's own chrome — the sign-in screen and the
-/// sidebar header. Everything inside the chat surface is styled by
-/// `streamChatStyles` from the SDK.
+/// Styles for the example app's own chrome: the sign-in screen and the sidebar
+/// header. Everything inside the chat surface is styled by `streamChatStyles`
+/// from the SDK.
 final List<StyleRule> appStyles = [
   css('.app-signin').styles(raw: {
     'display': 'flex',
