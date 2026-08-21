@@ -1,0 +1,68 @@
+name: Deploy example
+
+# Publishes the example app to GitHub Pages at
+# https://getstream.github.io/stream-chat-jaspr/
+#
+# The app is a static bundle with no server side, and index.html references the
+# compiled JavaScript relatively, so serving it from a repository subpath needs
+# no base href or build time configuration.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. In-progress runs are left alone so a deploy that is
+# already publishing is never cut off half way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: |
+          dart pub get --directory packages/stream_chat_jaspr
+          dart pub get --directory example
+
+      # A broken build is worse than a stale one, so the deploy is gated on the
+      # same checks that run locally.
+      - name: Analyze
+        run: dart analyze packages/stream_chat_jaspr example
+
+      - name: Test
+        working-directory: packages/stream_chat_jaspr
+        run: dart test
+
+      - name: Build
+        working-directory: example
+        run: dart run tool/dev.dart --release --output build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: example/build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
