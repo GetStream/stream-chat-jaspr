@@ -300,7 +300,11 @@ final List<StyleRule> streamChatStyles = [
     'display': 'flex',
     'flex-direction': 'column',
     'min-height': '0',
-    'flex': '0 1 auto',
+    // Never shrink. The channel list beside it is as tall as its content, so
+    // any shrink factor here hands most of the pane to the list and squeezes
+    // the field down until it spills out of its own box and the list, being
+    // the later sibling, paints over it. The results pane below caps itself.
+    'flex': '0 0 auto',
   }),
   css('.sc-search__field', [
     css('&').styles(raw: {
