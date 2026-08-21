@@ -191,6 +191,13 @@ final List<StyleRule> streamChatStyles = [
   css.media(MediaQuery.screen(maxWidth: Unit.pixels(1100)), [
     // Two full columns stop fitting well before the mobile breakpoint, so the
     // thread replaces the channel list rather than squeezing everything.
+    //
+    // The template has to collapse along with it. Hiding a grid child does not
+    // remove its column, so leaving two columns here would drop the channel
+    // pane into the narrow first one and leave the wide one empty, squeezing
+    // the conversation to nothing behind the thread.
+    css('.sc-shell:has(.sc-conversation-split[data-thread="open"])')
+        .styles(raw: {'grid-template-columns': '1fr'}),
     css('.sc-shell:has(.sc-conversation-split[data-thread="open"]) '
             '.sc-channel-list-pane')
         .styles(raw: {'display': 'none'}),
