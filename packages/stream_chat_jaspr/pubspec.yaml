@@ -4,7 +4,7 @@ description: >-
   stream_chat client to render a chat experience as real DOM in the browser.
 version: 0.2.0-dev.1
 publish_to: none
-repository: https://github.com/GetStream/stream-chat-flutter
+repository: https://github.com/GetStream/stream-chat-jaspr
 
 environment:
   sdk: ^3.11.0
