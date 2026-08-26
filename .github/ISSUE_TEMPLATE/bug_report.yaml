@@ -1,0 +1,98 @@
+name: Bug report
+description: Something in the Jaspr components does not behave as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying the experimental Jaspr components.
+
+        This package is a feasibility study rather than a supported product, so
+        please keep questions about Stream Chat itself, or about the Flutter
+        SDK, in the places linked on the previous page.
+  - type: checkboxes
+    id: acknowledgement
+    attributes:
+      label: Before filing
+      options:
+        - label: I have read the feature coverage table in the README and this is not a listed gap
+          required: true
+        - label: I understand the package is experimental and that breaking changes are expected
+          required: true
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Which browsers show the problem?
+      description: You may select more than one.
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Another browser, named below
+    validations:
+      required: true
+  - type: dropdown
+    id: demo
+    attributes:
+      label: Does the hosted demo show it too?
+      description: >-
+        https://getstream.github.io/stream-chat-jaspr/ runs the example app on
+        the current build. Checking there separates a problem in the components
+        from something in your own setup, and saves a round trip.
+      options:
+        - Yes, the demo has the same problem
+        - No, the demo behaves correctly
+        - I have not checked
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      value: |
+        dart --version:
+        jaspr:
+        stream_chat_jaspr:
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See '...'
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: supporting
+    attributes:
+      label: Supporting code, screenshots or a recording
+      description: >-
+        The most useful thing you can attach is the smallest component tree that
+        still shows the problem.
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console output
+      description: >-
+        Anything logged to the developer console, including failed network
+        requests. This is formatted automatically, so backticks are not needed.
+      render: shell
+  - type: textarea
+    id: analyze
+    attributes:
+      label: dart analyze output
+      description: If there are analysis errors, please try resolving them before filing.
+      render: shell
