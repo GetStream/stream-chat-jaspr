@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest something the Jaspr components should be able to do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping shape the experiment.
+
+        This project follows the Stream Chat Flutter SDK, so the requests that
+        travel furthest are the ones naming the Flutter behaviour they want
+        brought across.
+  - type: dropdown
+    id: parity
+    attributes:
+      label: Does the Flutter SDK already do this?
+      description: Parity with stream_chat_flutter is the yardstick this port measures itself against.
+      options:
+        - Yes, and this port is missing it
+        - No, it would be new in both
+        - I am not sure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: "Example: I cannot do ... without dropping down to the raw client."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried instead?
+      description: Including anything you have built directly on top of stream_chat to work around it.
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything else
+      description: >-
+        Screenshots, a link to the Flutter implementation, or prior art from
+        another Stream SDK.

@@ -1,0 +1,13 @@
+# Open ended feedback is the point of an experiment, so a blank issue stays
+# available rather than forcing everything through a form.
+blank_issues_enabled: true
+contact_links:
+  - name: Stream Chat Flutter SDK
+    url: https://github.com/GetStream/stream-chat-flutter/issues
+    about: Bugs in the Flutter SDK, or in the stream_chat Dart client this package builds on.
+  - name: Jaspr framework
+    url: https://github.com/schultek/jaspr/issues
+    about: Problems with Jaspr itself rather than with these components.
+  - name: Stream support
+    url: https://getstream.io/contact/support/
+    about: Questions about your Stream account, the API, or a production application.
