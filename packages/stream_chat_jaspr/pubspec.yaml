@@ -3,7 +3,6 @@ description: >-
   Experimental Jaspr UI components for Stream Chat. Builds on the pure-Dart
   stream_chat client to render a chat experience as real DOM in the browser.
 version: 0.2.0-dev.1
-publish_to: none
 repository: https://github.com/GetStream/stream-chat-jaspr
 
 environment:
