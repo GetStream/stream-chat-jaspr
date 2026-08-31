@@ -19,13 +19,24 @@ provided by `stream_chat`, which is re-exported here so a single import covers b
 
 ## Installation
 
+```bash
+dart pub add stream_chat_jaspr
+```
+
+```yaml
+dependencies:
+  stream_chat_jaspr: ^0.2.0-dev.1
+```
+
+Releases are prereleases while the project is experimental, so the constraint carries a
+`-dev` suffix. To develop against a checkout of the repository, depend on it by path
+instead:
+
 ```yaml
 dependencies:
   stream_chat_jaspr:
     path: ../packages/stream_chat_jaspr
 ```
-
-The package is not published to pub.dev.
 
 ## Usage
 

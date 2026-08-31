@@ -10,6 +10,8 @@ release build of the example application is 0.8 MB of JavaScript, 233 KB gzipped
 
 **Live demo: <https://getstream.github.io/stream-chat-jaspr/>**
 
+**Package: <https://pub.dev/packages/stream_chat_jaspr>**
+
 > **Status: experimental.** This is a feasibility study, not a supported product. Breaking
 > changes should be expected, and some features of the Flutter SDK are still missing. See
 > [Feature coverage](#feature-coverage) before adopting it.
@@ -59,13 +61,27 @@ behave exactly as they do in the Flutter SDK.
 
 ## Installation
 
+The package is published on pub.dev as
+[`stream_chat_jaspr`](https://pub.dev/packages/stream_chat_jaspr).
+
+```bash
+dart pub add stream_chat_jaspr
+```
+
+```yaml
+dependencies:
+  stream_chat_jaspr: ^0.2.0-dev.1
+```
+
+Releases are prereleases while the project is experimental, so the constraint carries a
+`-dev` suffix. To develop against a checkout of this repository, depend on it by path
+instead:
+
 ```yaml
 dependencies:
   stream_chat_jaspr:
     path: packages/stream_chat_jaspr
 ```
-
-The package is not published to pub.dev.
 
 ## Quick start
 
