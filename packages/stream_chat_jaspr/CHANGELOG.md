@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-dev.2
+
+Documentation only. The library is unchanged from `0.2.0-dev.1`.
+
+- Installation instructions now point at the published package and lead with
+  `dart pub add stream_chat_jaspr`, replacing the claim that the package was unpublished
+  and the path dependency that came with it.
+
 ## 0.2.0-dev.1
 
 Brings the component set much closer to the Flutter SDK.
