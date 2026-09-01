@@ -70,7 +70,7 @@ dart pub add stream_chat_jaspr
 
 ```yaml
 dependencies:
-  stream_chat_jaspr: ^0.2.0-dev.1
+  stream_chat_jaspr: ^0.2.0-dev.2
 ```
 
 Releases are prereleases while the project is experimental, so the constraint carries a
